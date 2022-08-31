@@ -1,2 +1,3 @@
 # competitive-coding-tips-tricks
-Precomputation
+Precomputation for java code
+Fast Input Output
