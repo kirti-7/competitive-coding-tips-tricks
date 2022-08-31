@@ -1,0 +1,346 @@
+refer to https://www.codechef.com/users/zakir_ahmed for more 
+
+
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.UncheckedIOException;
+import java.io.Writer;
+import java.util.Arrays;
+
+class MaximumScore {
+
+	private static class Chapter implements Comparable<Chapter>{
+		public int time;
+		public long marks;
+
+		public Chapter(int time, long marks) {
+			this.time = time;
+			this.marks = marks;
+		}
+
+		@Override
+		public int compareTo(Chapter o) {
+			if(this.marks==o.marks) {
+				return 0;
+			}else if(this.marks>o.marks) {
+				return -1;
+			}else {
+				return 1;
+			}
+		}		
+	}
+	public static void main (String[] args) throws java.lang.Exception {
+		InputStream inputStream = System.in;
+		OutputStream outputStream = System.out;
+		FastInput in = new FastInput(inputStream);
+		FastOutput out = new FastOutput(outputStream);
+		String newLine = "\n";
+
+		int testcases= in.ri();
+		for(int i=0 ; i<testcases ; i++){
+
+			int N = in.ri();
+			int K = in.ri();
+			int[] M = new int[N];
+			int[] T = new int[N];
+			Chapter[] C = new Chapter[N];
+			for(int k=0;k<N;k++) {
+				M[k]=in.ri();
+				T[k]=in.ri();
+				C[k]=new Chapter(T[k],M[k]);
+			}
+			Arrays.sort(C);
+			
+			long ans=solve(C,K);
+			out.append(String.valueOf(ans));
+			out.append(newLine);
+		}
+		out.flush();
+		out.close();
+	}
+
+	static long solve(Chapter[] chapters, int sum){
+		long answer = 0;
+		int N = chapters.length;
+		
+		boolean dp[][] = new boolean[N + 1][sum + 1];
+		long maximum[][] = new long[N + 1][sum + 1];
+		long result[][] = new long[N + 1][sum + 1];
+		
+		for (int i = 0; i <= N; i++) {
+			dp[i][0] = true;
+		}
+
+		for (int i = 1; i <= sum; i++) {
+			dp[0][i] = false;
+		}
+		
+		for (int i = 1; i <= N; i++){
+			Chapter current = chapters[i - 1];
+			for (int j = 1; j <= sum; j++){
+				if(dp[i - 1][j]) {
+					dp[i][j]=true;
+					maximum[i][j]=maximum[i-1][j];
+					result[i][j]=result[i-1][j];
+				}
+
+				if (current.time <= j) {
+					if(dp[i - 1][j - current.time]) {
+						dp[i][j]=true;
+						long res = maximum[i - 1][j - current.time]+current.marks;
+						if(res>maximum[i][j]) {
+							maximum[i][j]=res;
+						}
+						
+						if(maximum[i - 1][j - current.time]>result[i][j]) {
+							result[i][j]=maximum[i - 1][j - current.time];
+						}
+					}
+				}
+			}
+		}
+		
+		for (int i = 1; i <= sum; i++) {
+			if(dp[N][i] && result[N][i]>answer) {
+				answer=result[N][i];
+			}
+		}
+		return answer;
+	}
+	
+	static long findMin(int arr[], int K)
+	{
+		int sum = 0; 
+		for (int i = 0; i < K; i++)
+			sum += arr[i];
+
+		boolean dp[][] = new boolean[K + 1][sum + 1];
+
+		for (int i = 0; i <= K; i++)
+			dp[i][0] = true;
+
+
+		for (int i = 1; i <= sum; i++)
+			dp[0][i] = false;
+
+		for (int i = 1; i <= K; i++)
+		{
+			for (int j = 1; j <= sum; j++)
+			{
+				dp[i][j] = dp[i - 1][j];
+
+				if (arr[i - 1] <= j)
+					dp[i][j] |= dp[i - 1][j - arr[i - 1]];
+			}
+		}
+
+		int diff = Integer.MAX_VALUE;
+
+		for (int j = sum / 2; j >= 0; j--)
+		{
+			if (dp[K][j] == true)
+			{
+				diff = sum - 2 * j;
+				break;
+			}
+		}
+		return diff;
+	}
+	
+	public static void print(int[] arr) {
+		StringBuilder builder = new StringBuilder();
+		for(int i=0;i<arr.length;i++) {
+			builder.append(arr[i]);
+			if(i!=arr.length-1) {
+				builder.append(" ");
+			}
+		}
+		System.out.println(builder.toString());
+	}
+
+	static class FastOutput implements AutoCloseable, Closeable, Appendable {
+		private static final int THRESHOLD = 1 << 13;
+		private final Writer os;
+		private StringBuilder cache = new StringBuilder(THRESHOLD * 2);
+
+		public FastOutput append(CharSequence csq) {
+			cache.append(csq);
+			return this;
+		}
+
+		public FastOutput append(CharSequence csq, int start, int end) {
+			cache.append(csq, start, end);
+			return this;
+		}
+
+		private void afterWrite() {
+			if (cache.length() < THRESHOLD) {
+				return;
+			}
+			flush();
+		}
+
+		public FastOutput(Writer os) {
+			this.os = os;
+		}
+
+		public FastOutput(OutputStream os) {
+			this(new OutputStreamWriter(os));
+		}
+
+		public FastOutput append(char c) {
+			cache.append(c);
+			afterWrite();
+			return this;
+		}
+
+		public FastOutput append(int c) {
+			cache.append(c);
+			afterWrite();
+			return this;
+		}
+
+		public FastOutput append(String c) {
+			cache.append(c);
+			afterWrite();
+			return this;
+		}
+
+		public FastOutput println(int c) {
+			return append(c).println();
+		}
+
+		public FastOutput println() {
+			return append(System.lineSeparator());
+		}
+
+		public FastOutput flush() {
+			try {
+				os.append(cache);
+				os.flush();
+				cache.setLength(0);
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+			return this;
+		}
+
+		public void close() {
+			flush();
+			try {
+				os.close();
+			} catch (IOException e) {
+				throw new UncheckedIOException(e);
+			}
+		}
+
+		public String toString() {
+			return cache.toString();
+		}
+
+	}
+
+	static class FastInput {
+		private final InputStream is;
+		private StringBuilder defaultStringBuf = new StringBuilder(1 << 13);
+		private byte[] buf = new byte[1 << 13];
+		private int bufLen;
+		private int bufOffset;
+		private int next;
+
+		public FastInput(InputStream is) {
+			this.is = is;
+		}
+
+		private int read() {
+			while (bufLen == bufOffset) {
+				bufOffset = 0;
+				try {
+					bufLen = is.read(buf);
+				} catch (IOException e) {
+					bufLen = -1;
+				}
+				if (bufLen == -1) {
+					return -1;
+				}
+			}
+			return buf[bufOffset++];
+		}
+
+		public void skipBlank() {
+			while (next >= 0 && next <= 32) {
+				next = read();
+			}
+		}
+
+		public String next() {
+			return readString();
+		}
+
+		public int ri() {
+			return readInt();
+		}
+
+		public int readInt() {
+			int sign = 1;
+
+			skipBlank();
+			if (next == '+' || next == '-') {
+				sign = next == '+' ? 1 : -1;
+				next = read();
+			}
+
+			int val = 0;
+			if (sign == 1) {
+				while (next >= '0' && next <= '9') {
+					val = val * 10 + next - '0';
+					next = read();
+				}
+			} else {
+				while (next >= '0' && next <= '9') {
+					val = val * 10 - next + '0';
+					next = read();
+				}
+			}
+
+			return val;
+		}
+
+		public String readString(StringBuilder builder) {
+			skipBlank();
+
+			while (next > 32) {
+				builder.append((char) next);
+				next = read();
+			}
+
+			return builder.toString();
+		}
+
+		public String readString() {
+			defaultStringBuf.setLength(0);
+			return readString(defaultStringBuf);
+		}
+
+		public int rs(char[] data, int offset) {
+			return readString(data, offset);
+		}
+
+		public int readString(char[] data, int offset) {
+			skipBlank();
+
+			int originalOffset = offset;
+			while (next > 32) {
+				data[offset++] = (char) next;
+				next = read();
+			}
+
+			return offset - originalOffset;
+		}
+
+	}
+
+}
